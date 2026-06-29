@@ -592,6 +592,11 @@
     } catch(e) {}
     console.warn('[Chev] No backend URL in Firebase. Run `ngrok http 8080` alongside Dexter.');
   }
+  // Wrapper: adds ngrok bypass header when going through a tunnel
+  function _apiFetch(path, opts = {}) {
+    if (API_BASE) opts.headers = { 'ngrok-skip-browser-warning': 'true', ...(opts.headers || {}) };
+    return fetch(API_BASE + path, opts);
+  }
   function getOpenWebUIKey() { return getStoredKey('chevOpenWebUIKey', 'Paste your Open WebUI API key (used to talk to Chev):'); }
   function getOpenWebUIUrl() { return localStorage.getItem('chevOpenWebUIUrl') || 'http://localhost:3000/api/chat/completions'; }
   function getChevModelId() { return getStoredKey('chevModelId', "What is Chev's model id in Open WebUI? (e.g. chev-chelios)") || 'chev-chelios'; }
@@ -979,7 +984,7 @@
 
     // Fallback: Dexter's /api/prices (cached every 3s via yfinance)
     try {
-      const res = await fetch(API_BASE + '/api/prices');
+      const res = await _apiFetch('/api/prices');
       const data = await res.json();
       forexItems.forEach(item => {
         const price = data[item.symbol];
@@ -1141,7 +1146,7 @@
 
   async function refreshTradingLogs() {
     try {
-      const res = await fetch(API_BASE + '/api/trades');
+      const res = await _apiFetch('/api/trades');
       if (!res.ok) throw new Error('no response');
       renderTradingLogs(await res.json());
     } catch (e) {
@@ -1152,7 +1157,7 @@
   document.getElementById('resetBalance').addEventListener('click', async () => {
     if (!confirm('Reset Dexter\'s balance to $10,000 and clear all open/pending trades?')) return;
     try {
-      const res = await fetch(API_BASE + '/api/reset_balance', { method: 'POST' });
+      const res = await _apiFetch('/api/reset_balance', { method: 'POST' });
       const data = await res.json();
       if (data.ok) { alert('Done — balance reset to $10,000. Restart Dexter to fully reload state.'); refreshTradingLogs(); }
       else alert('Reset failed: ' + data.error);
@@ -1357,7 +1362,7 @@
 
   async function refreshChevsCorner() {
     try {
-      const res = await fetch(API_BASE + '/api/pending');
+      const res = await _apiFetch('/api/pending');
       if (!res.ok) throw new Error('no response');
       currentIdeas = await res.json();
       renderChevIdeas();
