@@ -1125,7 +1125,7 @@
         const confData = encodeURIComponent(JSON.stringify(t.confluence_prices || {}));
         const assetType = sym.endsWith('USDT') ? 'crypto' : (sym.includes('/') ? 'forex' : 'stock');
         html += `
-          <div class="logRow${justClosed ? ' pulse' : ''}" data-pair="${sym}" data-type="${assetType}" data-conf="${confData}" data-row="${t.row||''}" data-entry="${t.entry||''}" data-sl="${t.sl||''}" data-tp="${t.tp||''}" data-direction="${t.direction||''}" data-ts="${t.open_ts||''}" data-tags="${t.tags||''}">
+          <div class="logRow${justClosed ? ' pulse' : ''}" data-pair="${sym}" data-type="${assetType}" data-conf="${confData}" data-row="${t.row||''}" data-entry="${t.entry||''}" data-sl="${t.sl||''}" data-tp="${t.tp||''}" data-direction="${t.direction||''}" data-ts="${t.open_ts||''}" data-tags="${t.tags||''}" data-status="${t.status||''}">
             <span class="logMood">${moodEmoji(t.live_pnl)}</span>
             <span class="logPair">${sym}</span>
             <span class="logType">${t.trade_type || 'day'}</span>
@@ -1144,7 +1144,7 @@
       const assetType = sym.endsWith('USDT') ? 'crypto' : (sym.includes('/') ? 'forex' : 'stock');
       const openTs = c.open_ts || c.ts || '';
       html += `
-        <div class="logRow lastClosedRow" data-pair="${sym}" data-type="${assetType}" data-conf="{}" data-row="" data-entry="${c.entry||''}" data-sl="${c.sl||''}" data-tp="${c.tp||''}" data-direction="${c.direction||''}" data-ts="${openTs}" data-tags="${c.tags||''}">
+        <div class="logRow lastClosedRow" data-pair="${sym}" data-type="${assetType}" data-conf="{}" data-row="" data-entry="${c.entry||''}" data-sl="${c.sl||''}" data-tp="${c.tp||''}" data-direction="${c.direction||''}" data-ts="${openTs}" data-tags="${c.tags||''}" data-status="CLOSED">
           <span class="logDir">${dirEmoji}</span>
           <span class="logPair">${sym}</span>
           <span class="logType">${c.trade_type || ''}</span>
@@ -1164,12 +1164,13 @@
         row.style.borderLeft = '2px solid #2962ff';
         activeLogTrade = rowId;
         const tradeSnap = {
-          entry: parseFloat(row.dataset.entry) || null,
-          sl:    parseFloat(row.dataset.sl)    || null,
-          tp:    parseFloat(row.dataset.tp)    || null,
+          entry:     parseFloat(row.dataset.entry) || null,
+          sl:        parseFloat(row.dataset.sl)    || null,
+          tp:        parseFloat(row.dataset.tp)    || null,
           direction: row.dataset.direction,
-          open_ts: row.dataset.ts,
-          tags: row.dataset.tags,
+          open_ts:   row.dataset.ts,
+          tags:      row.dataset.tags,
+          status:    row.dataset.status || 'OPEN',
         };
         currentSymbol = pair; currentType = type;
         drawings = loadDrawings(currentSymbol); updateObjTree();
@@ -1926,8 +1927,8 @@
       }
       dctx.restore();
     }
-    // Trade entry dot overlay
-    if (_overlayEntry && _activeTrade && _activeTrade.open_ts && _activeTrade.entry != null) {
+    // Trade entry dot overlay — only for OPEN trades (PENDING hasn't triggered yet)
+    if (_overlayEntry && _activeTrade && _activeTrade.open_ts && _activeTrade.entry != null && (_activeTrade.status || 'OPEN') !== 'PENDING') {
       const tsStr = _activeTrade.open_ts; // "2026-06-29 02:15:00"
       const tsUnix = Math.floor(new Date(tsStr.replace(' ','T')).getTime() / 1000);
       // find closest candle
