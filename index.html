@@ -1113,19 +1113,21 @@
   }
 
   function renderTradingLogs(data) {
-    const active = (data.active || []).slice(0, 5);
-    const lastClosed = data.last_closed;
+    const active = (data.trades || data.active || []).filter(t => t.status === 'OPEN' || t.status === 'PENDING').slice(0, 5);
+    const closedList = (data.closed || []).slice().reverse().slice(0, 3);
     let html = '';
     if (!active.length) {
       html += '<div class="emptyNote">No active trades right now.</div>';
     } else {
       active.forEach(t => {
+        const sym = t.symbol || t.pair || '';
         const justClosed = lastTradeStatuses[t.row] && lastTradeStatuses[t.row] !== t.status;
         const confData = encodeURIComponent(JSON.stringify(t.confluence_prices || {}));
+        const assetType = sym.endsWith('USDT') ? 'crypto' : (sym.includes('/') ? 'forex' : 'stock');
         html += `
-          <div class="logRow${justClosed ? ' pulse' : ''}" data-pair="${t.pair}" data-type="${t.pair.endsWith('USDT') ? 'crypto' : (t.pair.includes('/') ? 'forex' : 'stock')}" data-conf="${confData}" data-row="${t.row}" data-entry="${t.entry||''}" data-sl="${t.sl||''}" data-tp="${t.tp||''}" data-direction="${t.direction||''}" data-ts="${t.open_ts||''}" data-tags="${t.tags||''}">
+          <div class="logRow${justClosed ? ' pulse' : ''}" data-pair="${sym}" data-type="${assetType}" data-conf="${confData}" data-row="${t.row||''}" data-entry="${t.entry||''}" data-sl="${t.sl||''}" data-tp="${t.tp||''}" data-direction="${t.direction||''}" data-ts="${t.open_ts||''}" data-tags="${t.tags||''}">
             <span class="logMood">${moodEmoji(t.live_pnl)}</span>
-            <span class="logPair">${t.pair}</span>
+            <span class="logPair">${sym}</span>
             <span class="logType">${t.trade_type || 'day'}</span>
             <span class="logLev">${t.leverage}x</span>
             <span class="logPnl ${pnlClass(t.live_pnl)}">${fmtPnl(t.live_pnl)}</span>
@@ -1133,18 +1135,21 @@
         lastTradeStatuses[t.row] = t.status;
       });
     }
-    if (lastClosed) {
-      const resultEmoji = lastClosed.outcome === 'WIN' ? '😉' : '😞';
-      const dirEmoji = lastClosed.direction === 'LONG' ? '⬆️' : '⬇️';
+    closedList.forEach(c => {
+      const sym = c.symbol || c.pair || '';
+      const pnl = c.pnl != null ? c.pnl : (c.result != null ? c.result : 0);
+      const outcome = (c.outcome || '').toUpperCase();
+      const resultEmoji = outcome === 'WIN' ? '😉' : '😞';
+      const dirEmoji = (c.direction || '').toUpperCase() === 'LONG' ? '⬆️' : '⬇️';
       html += `
         <div class="logRow lastClosedRow">
           <span class="logDir">${dirEmoji}</span>
-          <span class="logPair">${lastClosed.pair}</span>
-          <span class="logType">${lastClosed.trade_type || ''}</span>
+          <span class="logPair">${sym}</span>
+          <span class="logType">${c.trade_type || ''}</span>
           <span class="logLev">closed</span>
-          <span class="logPnl ${pnlClass(lastClosed.result)}">${resultEmoji} ${fmtPnl(lastClosed.result)}</span>
+          <span class="logPnl ${pnlClass(pnl)}">${resultEmoji} ${fmtPnl(pnl)}</span>
         </div>`;
-    }
+    });
     tradingLogsEl.innerHTML = html;
 
     tradingLogsEl.querySelectorAll('.logRow[data-pair]').forEach(row => {
@@ -1178,11 +1183,12 @@
 
   async function refreshTradingLogs() {
     try {
-      const res = await _apiFetch('/api/trades');
-      if (!res.ok) throw new Error('no response');
-      renderTradingLogs(await res.json());
+      const res = await fetch(`${FIREBASE_BASE}/monitor.json?_t=${Date.now()}`);
+      if (!res.ok) throw new Error('firebase error');
+      const data = await res.json();
+      if (data) renderTradingLogs(data);
     } catch (e) {
-      tradingLogsEl.innerHTML = '<div class="emptyNote">Can\'t reach Dexter - is dexter.py running?</div>';
+      tradingLogsEl.innerHTML = '<div class="emptyNote">Can\'t reach Firebase — is Dexter running and pushing?</div>';
     }
   }
 
