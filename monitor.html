@@ -931,9 +931,21 @@ function pendingCardHTML(t) {
   </div>`;
 }
 
+function chevVerdictBadge(t) {
+  const v = t.chev_verdict || '';
+  if (!v || v === 'UNKNOWN') return '';
+  const map = { APPROVED: ['✅','#2a6b2a'], CAUTION: ['⚠️','#6b5a1a'], REJECTED: ['❌','#6b1a1a'] };
+  const [icon, bg] = map[v] || ['🤔','#333'];
+  const tip = t.chev_feedback ? ` title="${t.chev_feedback.replace(/"/g,"'")}"` : '';
+  return `<span${tip} style="font-size:9px;background:${bg};color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;cursor:default">${icon} ${v}</span>`;
+}
+
 function janeTradeCardHTML(t) {
   const pnl = t.live_pnl || 0;
   const em  = mood(pnl);
+  const verdict = chevVerdictBadge(t);
+  const question = t.chev_question
+    ? `<div class="trade-meta" style="color:var(--gold);font-style:italic">🎙 ${t.chev_question}</div>` : '';
   return `<div class="trade-card" style="border-left-color:var(--gold)">
     <div class="trade-top">
       <div class="trade-left">
@@ -942,10 +954,12 @@ function janeTradeCardHTML(t) {
         <div class="dir-pill dir-${t.direction}">${t.direction}</div>
         ${t.trade_type ? `<div class="type-pill">${t.trade_type}</div>` : ''}
         <span style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:.5px">JANE</span>
+        ${verdict}
       </div>
       <div class="trade-pnl ${pnlClass(pnl)}">${fmtPnl(pnl)}</div>
     </div>
     <div class="trade-meta">Entry ${fmtPrice(t.symbol, t.entry)}</div>
+    ${question}
     <div class="tow-wrap">
       <div class="tow-track"><div class="tow-green" style="width:50%"></div></div>
       <div class="tow-pct">—</div>
@@ -963,6 +977,7 @@ function janeClosedCardHTML(e) {
   const border = isWin ? 'var(--green)' : 'var(--red)';
   const em     = isWin ? '✅' : '❌';
   const outPill = `<span class="dir-pill ${isWin ? 'dir-long' : 'dir-short'}">${e.outcome}</span>`;
+  const verdict = chevVerdictBadge(e);
   return `<div class="trade-card" style="border-left-color:${border}">
     <div class="trade-top">
       <div class="trade-left">
@@ -971,6 +986,7 @@ function janeClosedCardHTML(e) {
         <div class="dir-pill dir-${e.direction}">${e.direction}</div>
         ${outPill}
         <span style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:.5px">JANE</span>
+        ${verdict}
       </div>
       <div class="trade-pnl ${pnlCls}">${fmtPnl(e.pnl)}</div>
     </div>
