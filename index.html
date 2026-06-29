@@ -1407,16 +1407,13 @@
         const vTip  = t.chev_feedback ? ` title="${t.chev_feedback.replace(/"/g,"'")}"` : '';
         const verdictSpan = vIcon
           ? `<span${vTip} style="font-size:9px;opacity:0.9;cursor:default">${vIcon}</span>` : '';
-        const questionLine = t.chev_question
-          ? `<div style="font-size:9px;color:#d4af37;font-style:italic;padding:2px 0 0 20px;opacity:0.85">🎙 ${t.chev_question}</div>` : '';
-        html += `<div class="logRow" style="border-left:2px solid rgba(212,175,55,0.45);flex-wrap:wrap">
+        html += `<div class="logRow" style="border-left:2px solid rgba(212,175,55,0.45)">
           <span class="logMood">${moodEmoji(pnl)}</span>
           <span class="logPair">${t.pair}</span>
           <span class="logType">${t.trade_type || 'day'}</span>
           <span class="logLev">${isPending ? 'pend' : (t.leverage || 1) + 'x'}</span>
           ${verdictSpan}
           <span class="logPnl ${isPending ? '' : pnlClass(pnl)}">${isPending ? 'WAIT' : fmtPnl(pnl)}</span>
-          ${questionLine}
         </div>`;
       });
     }

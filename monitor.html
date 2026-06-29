@@ -377,7 +377,6 @@
     padding: 12px 18px;
     border-top: 1px solid var(--border);
   }
-  .modal-row { }
   .modal-row-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; }
   .modal-row-val   { font-family: var(--mono); font-size: 14px; color: var(--white); margin-top: 2px; }
 
@@ -944,8 +943,6 @@ function janeTradeCardHTML(t) {
   const pnl = t.live_pnl || 0;
   const em  = mood(pnl);
   const verdict = chevVerdictBadge(t);
-  const question = t.chev_question
-    ? `<div class="trade-meta" style="color:var(--gold);font-style:italic">🎙 ${t.chev_question}</div>` : '';
   return `<div class="trade-card" style="border-left-color:var(--gold)">
     <div class="trade-top">
       <div class="trade-left">
@@ -959,7 +956,6 @@ function janeTradeCardHTML(t) {
       <div class="trade-pnl ${pnlClass(pnl)}">${fmtPnl(pnl)}</div>
     </div>
     <div class="trade-meta">Entry ${fmtPrice(t.symbol, t.entry)}</div>
-    ${question}
     <div class="tow-wrap">
       <div class="tow-track"><div class="tow-green" style="width:50%"></div></div>
       <div class="tow-pct">—</div>
