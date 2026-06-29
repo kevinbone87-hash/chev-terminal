@@ -1589,6 +1589,7 @@
   let cursorPos    = null; // tracks mouse for measure crosshairs
   let pencilDrawing = false;
   let pencilPoints  = [];
+  let _drawStream  = null;
   let drawings     = loadDrawings(currentSymbol);
   _syncDrawings(currentSymbol); _subscribeDrawings(currentSymbol); // pull latest from Firebase + live updates
   let previewShape = null;
@@ -1649,7 +1650,6 @@
     } catch(e) {}
   }
   // Real-time SSE listener — friend's drawings appear on your canvas instantly
-  let _drawStream = null;
   function _subscribeDrawings(sym) {
     if (_drawStream) { _drawStream.close(); _drawStream = null; }
     const sseUrl = _drawFbUrl(sym).replace('.json', '.json?stream=true&timeout=600000');
