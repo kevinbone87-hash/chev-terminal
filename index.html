@@ -792,10 +792,22 @@
 
   let currentCandles = [];
 
+  function _priceFormat(symbol, type) {
+    if (type === 'forex') {
+      const isJpy = symbol.toUpperCase().includes('JPY');
+      return isJpy
+        ? { type: 'price', precision: 3, minMove: 0.001 }
+        : { type: 'price', precision: 5, minMove: 0.00001 };
+    }
+    if (type === 'crypto') return { type: 'price', precision: 4, minMove: 0.0001 };
+    return { type: 'price', precision: 2, minMove: 0.01 };
+  }
+
   async function loadChart(symbol, interval, type) {
     statusEl.textContent = 'Loading...';
     symLabel.textContent = symbol;
     try {
+      candleSeries.applyOptions({ priceFormat: _priceFormat(symbol, type) });
       const candles = await fetchCandles(symbol, interval, type);
       currentCandles = candles;
       candleSeries.setData([]);
