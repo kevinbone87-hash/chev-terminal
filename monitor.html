@@ -524,14 +524,6 @@
 </div>
 <div id="janeTrades" data-section="janeOpen"></div>
 
-<!-- ─── Jane Pending ──────────────────────────────────────────── -->
-<div class="section-head" onclick="toggleSection('janePending')" style="cursor:pointer">
-  <div class="section-title" style="color:var(--gold)">Jane Pending</div>
-  <div class="section-badge" id="janePendingCount">0</div>
-  <div class="section-badge" id="janePendingToggle" style="margin-left:auto">▼</div>
-</div>
-<div id="janePendingTrades" data-section="janePending"></div>
-
 <!-- ─── Jane Closed ───────────────────────────────────────────── -->
 <div class="section-head" onclick="toggleSection('janeClosed')" style="cursor:pointer">
   <div class="section-title" style="color:var(--gold)">Jane Closed</div>
@@ -819,17 +811,14 @@ function renderAll() {
   }
 
   // Jane trades
-  const janeTrades   = (state.jane_trades || []).filter(t => t.status === 'OPEN');
-  const janePending  = (state.jane_trades || []).filter(t => t.status === 'PENDING');
-  const janeClosed   = (state.jane_closed || []).slice().reverse();
+  const janeTrades = (state.jane_trades || []).filter(t => t.status === 'OPEN');
+  const janeClosed = (state.jane_closed || []).slice().reverse();
 
-  document.getElementById('janeOpenCount').textContent   = janeTrades.length;
-  document.getElementById('janePendingCount').textContent = janePending.length;
-  document.getElementById('janeClosedCount').textContent  = janeClosed.length;
+  document.getElementById('janeOpenCount').textContent  = janeTrades.length;
+  document.getElementById('janeClosedCount').textContent = janeClosed.length;
 
-  const janeOpenEl    = document.getElementById('janeTrades');
-  const janePendingEl = document.getElementById('janePendingTrades');
-  const janeClosedEl  = document.getElementById('janeClosedTrades');
+  const janeOpenEl   = document.getElementById('janeTrades');
+  const janeClosedEl = document.getElementById('janeClosedTrades');
 
   if (!_collapsed['janeOpen']) {
     janeOpenEl.style.display = '';
@@ -838,14 +827,6 @@ function renderAll() {
     } else {
       janeOpenEl.innerHTML = janeTrades.map(t => janeTradeCardHTML(t)).join('');
       janeOpenEl.querySelectorAll('.trade-emoji').forEach(el => parseEmoji(el));
-    }
-  }
-  if (!_collapsed['janePending']) {
-    janePendingEl.style.display = '';
-    if (!janePending.length) {
-      janePendingEl.innerHTML = '<div class="empty-state">No pending Jane orders</div>';
-    } else {
-      janePendingEl.innerHTML = janePending.map(pendingCardHTML).join('');
     }
   }
   if (!_collapsed['janeClosed']) {
