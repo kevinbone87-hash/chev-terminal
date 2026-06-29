@@ -1141,8 +1141,10 @@
       const outcome = (c.outcome || '').toUpperCase();
       const resultEmoji = outcome === 'WIN' ? '😉' : '😞';
       const dirEmoji = (c.direction || '').toUpperCase() === 'LONG' ? '⬆️' : '⬇️';
+      const assetType = sym.endsWith('USDT') ? 'crypto' : (sym.includes('/') ? 'forex' : 'stock');
+      const openTs = c.open_ts || c.ts || '';
       html += `
-        <div class="logRow lastClosedRow">
+        <div class="logRow lastClosedRow" data-pair="${sym}" data-type="${assetType}" data-conf="{}" data-row="" data-entry="${c.entry||''}" data-sl="${c.sl||''}" data-tp="${c.tp||''}" data-direction="${c.direction||''}" data-ts="${openTs}" data-tags="${c.tags||''}">
           <span class="logDir">${dirEmoji}</span>
           <span class="logPair">${sym}</span>
           <span class="logType">${c.trade_type || ''}</span>
@@ -1279,16 +1281,14 @@
     overlayDrawings = [];
     if (!_activeTrade) { redrawAll(); return; }
 
-    // Entry / SL / TP price lines (always shown regardless of analysis toggle)
+    // Entry / SL / TP price lines
     if (_overlayEntry) {
       const { entry, sl, tp } = _activeTrade;
-      [
-        entry != null && { price: entry, color: 'rgba(149,152,161,0.5)', title: 'Entry' },
-        sl    != null && { price: sl,    color: 'rgba(242,54,69,0.5)',   title: 'SL' },
-        tp    != null && { price: tp,    color: 'rgba(8,153,129,0.5)',   title: 'TP' },
-      ].filter(Boolean).forEach(l => {
-        try { confPriceLines.push(candleSeries.createPriceLine({ price: l.price, color: l.color, lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: l.title })); } catch(e){}
-      });
+      // Entry — solid gold line, axis label visible
+      if (entry != null) try { confPriceLines.push(candleSeries.createPriceLine({ price: entry, color: 'rgba(212,175,55,0.6)', lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: 'Entry' })); } catch(e){}
+      // SL / TP — dashed, 50% opacity, no axis label (canvas draws small text)
+      if (sl != null) try { confPriceLines.push(candleSeries.createPriceLine({ price: sl, color: 'rgba(242,54,69,0.5)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '' })); } catch(e){}
+      if (tp != null) try { confPriceLines.push(candleSeries.createPriceLine({ price: tp, color: 'rgba(8,153,129,0.5)', lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: '' })); } catch(e){}
     }
 
     if (!_overlayAnalysisOn) { redrawAll(); return; }
@@ -1900,6 +1900,30 @@
       dctx.lineWidth=1; dctx.setLineDash([4,4]);
       dctx.beginPath(); dctx.moveTo(cursorPos.x,0); dctx.lineTo(cursorPos.x,drawCanvas.clientHeight); dctx.stroke();
       dctx.beginPath(); dctx.moveTo(0,cursorPos.y); dctx.lineTo(drawCanvas.clientWidth,cursorPos.y); dctx.stroke();
+      dctx.restore();
+    }
+    // SL / TP small canvas labels (75% smaller than entry text, right-aligned)
+    if (_overlayEntry && _activeTrade) {
+      const { sl, tp } = _activeTrade;
+      dctx.save();
+      dctx.font = '5px "Share Tech Mono",monospace';
+      dctx.textAlign = 'right';
+      dctx.textBaseline = 'bottom';
+      const xR = drawCanvas.clientWidth - 6;
+      if (sl != null) {
+        const sy = priceToY(sl);
+        if (sy != null) {
+          dctx.fillStyle = 'rgba(242,54,69,0.75)';
+          dctx.fillText(`SL ${sl}`, xR, sy - 2);
+        }
+      }
+      if (tp != null) {
+        const ty = priceToY(tp);
+        if (ty != null) {
+          dctx.fillStyle = 'rgba(8,153,129,0.75)';
+          dctx.fillText(`TP ${tp}`, xR, ty - 2);
+        }
+      }
       dctx.restore();
     }
     // Trade entry dot overlay
