@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - monitor.html
+  workflow_dispatch:
 
 jobs:
   sync:
